@@ -28,7 +28,7 @@ const PlayAgain = (props: any) => (
     </div>
 )
 
-const Game = (props: any) => {
+const useGameState = () => {
     const [stars, setStars] = useState<number>(utils.random(1, 9));
     const [availableNumbers, setAvailableNums] = useState<number[]>(utils.range(1, 9));
     const [candidateNumbers, setCandidateNums] = useState<number[]>(new Array<number>());
@@ -42,6 +42,24 @@ const Game = (props: any) => {
             return () => clearTimeout(timerId);
         }
     })
+
+    const setGameState = (newCandidateNumbers: number[]) => {
+        if (utils.sum(newCandidateNumbers) !== stars) {
+            setCandidateNums(newCandidateNumbers);
+        } else {
+            const newAvailableNumbers = availableNumbers.filter((n: number) => !newCandidateNumbers.includes(n));
+            setStars(utils.randomSumIn(newAvailableNumbers, 9));
+            setAvailableNums(newAvailableNumbers);
+            setCandidateNums(new Array<number>());
+        }
+    }
+    return {
+        stars, availableNumbers, candidateNumbers, secondsLeft, setGameState
+    }
+}
+
+const Game = (props: any) => {
+    const {stars, availableNumbers, candidateNumbers, secondsLeft, setGameState} = useGameState();
 
     const candidateAreWrong: boolean = utils.sum(candidateNumbers) > stars;
 
@@ -66,15 +84,7 @@ const Game = (props: any) => {
         const newCandidateNumbers: number[] = currentStatus === 'available' ? candidateNumbers.concat(num)
             : candidateNumbers.filter((cn: number) => cn !== num);
 
-        if (utils.sum(newCandidateNumbers) !== stars) {
-            setCandidateNums(newCandidateNumbers);
-        } else {
-            const newAvailableNumbers = availableNumbers.filter((n: number) => !newCandidateNumbers.includes(n));
-            setStars(utils.randomSumIn(newAvailableNumbers, 9));
-            setAvailableNums(newAvailableNumbers);
-            setCandidateNums(new Array<number>());
-        }
-
+        setGameState(newCandidateNumbers);
     }
 
     return (
@@ -84,8 +94,10 @@ const Game = (props: any) => {
             </div>
             <div className="body">
                 <div className="left">
-                    {gameStatus !== 'active' ? (<PlayAgain onClick={props.startNewGame} gameStatus={gameStatus}/>) : (
-                        <DisplayStars count={stars}/>)}
+                    {
+                        gameStatus !== 'active' ? (<PlayAgain onClick={props.startNewGame} gameStatus={gameStatus}/>)
+                            : (<DisplayStars count={stars}/>)
+                    }
 
                 </div>
                 <div className="right">
