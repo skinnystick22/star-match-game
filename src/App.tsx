@@ -2,29 +2,42 @@ import React, {useState} from 'react';
 import './App.css';
 
 const DisplayStars = (props: any) => (
-    <>
+    <React.Fragment>
         {utils.range(1, props.count).map((starId: number) =>
             <div key={starId} className="star"/>
         )}
-    </>
+    </React.Fragment>
 )
 
-const PlayNumber = ({playNum, status}) => (
+const PlayNumber = (props: any) => (
     <button
         className="number"
-        style={{backgroundColor: colors[status]}}
-        onClick={() => console.log('Num', playNum)}
+        style={{backgroundColor: colors[props.status]}}
+        onClick={() => props.onClick(props.playNum, props.status)}
     >
-        {playNum}
+        {props.playNum}
     </button>
 )
 
-const StarMatch = () => {
-    const [stars, setStars] = useState(utils.random(1, 9));
-    const [availableNumbers, setAvailableNums] = useState([1, 2, 3, 4, 5]);
-    const [candidateNumbers, setCandidateNums] = useState([2, 3]);
+const PlayAgain = (props: any) => (
+    <div className="game-done">
+        <button onClick={props.onClick}>Play Again</button>
+    </div>
+)
 
-    const candidateAreWrong = utils.sum(candidateNumbers) > stars;
+const StarMatch = () => {
+    const [stars, setStars] = useState<number>(utils.random(1, 9));
+    const [availableNumbers, setAvailableNums] = useState<number[]>(utils.range(1, 9));
+    const [candidateNumbers, setCandidateNums] = useState<number[]>(new Array<number>());
+
+    const candidateAreWrong: boolean = utils.sum(candidateNumbers) > stars;
+    const gameIsDone: boolean = availableNumbers.length === 0;
+
+    const resetGame = () => {
+        setStars(utils.random(1, 9));
+        setAvailableNums(utils.range(1, 9))
+        setCandidateNums(new Array<number>())
+    }
 
     const numberStatus = (num: number) => {
         if (!availableNumbers.includes(num)) {
@@ -37,6 +50,25 @@ const StarMatch = () => {
         return 'available';
     }
 
+    const onNumberClick = (num: number, currentStatus: string) => {
+        if (currentStatus === 'used') {
+            return;
+        }
+
+        const newCandidateNumbers: number[] = currentStatus === 'available' ? candidateNumbers.concat(num)
+            : candidateNumbers.filter((cn: number) => cn !== num);
+
+        if (utils.sum(newCandidateNumbers) !== stars) {
+            setCandidateNums(newCandidateNumbers);
+        } else {
+            const newAvailableNumbers = availableNumbers.filter((n: number) => !newCandidateNumbers.includes(n));
+            setStars(utils.randomSumIn(newAvailableNumbers, 9));
+            setAvailableNums(newAvailableNumbers);
+            setCandidateNums(new Array<number>());
+        }
+
+    }
+
     return (
         <div className="game">
             <div className="help">
@@ -44,7 +76,8 @@ const StarMatch = () => {
             </div>
             <div className="body">
                 <div className="left">
-                    <DisplayStars count={stars}/>
+                    {gameIsDone ? (<PlayAgain onClick={resetGame}/>) : (<DisplayStars count={stars}/>)}
+
                 </div>
                 <div className="right">
                     {utils.range(1, 9).map(number =>
@@ -52,6 +85,7 @@ const StarMatch = () => {
                             key={number}
                             status={numberStatus(number)}
                             playNum={number}
+                            onClick={onNumberClick}
                         />
                     )}
                 </div>
@@ -62,7 +96,7 @@ const StarMatch = () => {
 };
 
 // Color Theme
-const colors = {
+const colors: { [key: string]: string } = {
     available: 'lightgray',
     used: 'lightgreen',
     wrong: 'lightcoral',
@@ -82,14 +116,13 @@ const utils = {
 
     // Given an array of numbers and a max...
     // Pick a random sum (< max) from the set of all available sums in arr
-    randomSumIn: (arr: [], max: number) => {
-        const sets = [[]];
+    randomSumIn: (arr: number[], max: number) => {
+        const sets: number[][] = [[]];
         const sums = [];
-        for (let i = 0; i < arr.length; i++) {
-            for (let j = 0, len = sets.length; j < len; j++) {
-                const candidateSet = sets[j].concat(arr[i]);
-                // @ts-ignore
-                const candidateSum = utils.sum(candidateSet);
+        for (let i: number = 0; i < arr.length; i++) {
+            for (let j: number = 0, len = sets.length; j < len; j++) {
+                const candidateSet: number[] = sets[j].concat(arr[i]);
+                const candidateSum: number = utils.sum(candidateSet);
                 if (candidateSum <= max) {
                     sets.push(candidateSet);
                     sums.push(candidateSum);
