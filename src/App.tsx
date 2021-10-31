@@ -9,23 +9,29 @@ const DisplayStars = (props: any) => (
     </>
 )
 
-const PlayNumber = (props: any) => (
-    <button className="number" onClick={() => console.log('Num', props.number)}>
-        {props.number}
+const PlayNumber = ({playNum, status}) => (
+    <button
+        className="number"
+        style={{backgroundColor: colors[status]}}
+        onClick={() => console.log('Num', playNum)}
+    >
+        {playNum}
     </button>
 )
 
 const StarMatch = () => {
     const [stars, setStars] = useState(utils.random(1, 9));
-    const [availableNumbers, setAvailableNums] = useState(...);
-    const [candidateNumbers, setCandidateNums] = useState([]);
+    const [availableNumbers, setAvailableNums] = useState([1, 2, 3, 4, 5]);
+    const [candidateNumbers, setCandidateNums] = useState([2, 3]);
+
+    const candidateAreWrong = utils.sum(candidateNumbers) > stars;
 
     const numberStatus = (num: number) => {
         if (!availableNumbers.includes(num)) {
             return 'used';
         }
-        if (candidateNumbers.includes(num)){
-return ....
+        if (candidateNumbers.includes(num)) {
+            return candidateAreWrong ? 'wrong' : 'candidate';
         }
 
         return 'available';
@@ -41,10 +47,13 @@ return ....
                     <DisplayStars count={stars}/>
                 </div>
                 <div className="right">
-                    {utils.range(1, 9).map(number => <PlayNumber
-                        key={number}
-                        status={numberStatus(num)}
-                        number={number}/>)}
+                    {utils.range(1, 9).map(number =>
+                        <PlayNumber
+                            key={number}
+                            status={numberStatus(number)}
+                            playNum={number}
+                        />
+                    )}
                 </div>
             </div>
             <div className="timer">Time Remaining: 10</div>
@@ -63,7 +72,7 @@ const colors = {
 // Math science
 const utils = {
     // Sum an array
-    sum: (arr: []) => arr.reduce((acc, curr) => acc + curr, 0),
+    sum: (arr: number[]) => arr.reduce((acc, curr) => acc + curr, 0),
 
     // create an array of numbers between min and max (edges included)
     range: (min: number, max: number) => Array.from({length: max - min + 1}, (_, i) => min + i),
