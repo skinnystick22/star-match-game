@@ -8,10 +8,8 @@ const StarMatch = () => {
     return <Game key={gameId} startNewGame={() => setGameId(gameId + 1)}/>;
 }
 
-function App() {
-    return (
-        <StarMatch/>
-    );
+const App = () => {
+    return <StarMatch/>;
 }
 
 export default App;
